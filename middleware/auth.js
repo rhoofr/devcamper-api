@@ -35,6 +35,12 @@ exports.protect = asyncHandler(async (req, res, next) => {
   }
 });
 
+// Get user id from token
+exports.getIdFromToken = token => {
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  return decoded.id;
+};
+
 // Grant access to specific roles
 exports.authorize = (...roles) => {
   return (req, res, next) => {

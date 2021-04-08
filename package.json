@@ -5,8 +5,10 @@
   "main": "server.js",
   "scripts": {
     "start": "SET NODE_ENV=production&&node server",
-    "dev": "nodemon server",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start:test:donotuse": "SET NODE_ENV=test&&node server",
+    "test:jest:donotuse": "cross-env NODE_ENV=test jest --watch",
+    "test": "SET NODE_ENV=test&&nodemon --watch . --exec \"mocha -S -timeout 10000 || true\"",
+    "dev": "nodemon server"
   },
   "author": "Richard Hoofring",
   "license": "MIT",
@@ -31,5 +33,10 @@
     "nodemailer": "^6.5.0",
     "slugify": "^1.5.0",
     "xss-clean": "^0.1.1"
+  },
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "chai-http": "^4.3.0",
+    "mocha": "^8.3.2"
   }
 }

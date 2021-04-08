@@ -17,7 +17,11 @@ const errorHandler = require('./middleware/error');
 const connectDB = require('./config/db');
 
 // Load env vars
-dotenv.config({ path: './config/config.env' });
+if (process.env.NODE_ENV === 'test') {
+  dotenv.config({ path: './config/config.test.env' });
+} else {
+  dotenv.config({ path: './config/config.env' });
+}
 
 // Connect to database
 connectDB();
@@ -107,3 +111,5 @@ process.on('unhandledRejection', (err, promise) => {
     process.exit(1);
   });
 });
+
+module.exports = app;
