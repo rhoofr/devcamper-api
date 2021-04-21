@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const geocoder = require('../utils/geocoder');
@@ -106,6 +107,12 @@ exports.deleteBootcamp = asyncHandler(async (req, res, next) => {
     );
   }
 
+  // Remove any photo
+  if (bootcamp.photo !== 'no-photo.jpg') {
+    console.log(`removing ${process.env.FILE_UPLOAD_PATH}/${bootcamp.photo}`);
+    fs.unlinkSync(`${process.env.FILE_UPLOAD_PATH}/${bootcamp.photo}`);
+  }
+
   bootcamp.remove();
 
   res.status(200).json({ success: true, data: {} });
@@ -154,7 +161,7 @@ exports.bootcampPhotoUpload = asyncHandler(async (req, res, next) => {
   if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
     return next(
       new ErrorResponse(
-        `User ${req.params.id} is not authorized to update this bootcamp`,
+        `User ${req.user.id} is not authorized to update this bootcamp`,
         401
       )
     );

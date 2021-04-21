@@ -48,7 +48,7 @@ if (process.env.NODE_ENV === 'development') {
   });
   morgan.format(
     'myformat',
-    ':date[America/New_York] - Method=:method - URL=:url - Status=:status - ContentLength=:res[content-length] - ResponseTime=:response-time ms - UserAgent=:user-agent'
+    '\n:date[America/New_York] - Method=:method - URL=:url - Status=:status - ContentLength=:res[content-length] - ResponseTime=:response-time ms - UserAgent=:user-agent'
   );
 
   app.use(morgan('myformat'));

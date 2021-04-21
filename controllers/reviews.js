@@ -9,7 +9,14 @@ const Bootcamp = require('../models/Bootcamp');
 // @access    Public
 exports.getReviews = asyncHandler(async (req, res, next) => {
   if (req.params.bootcampId) {
-    const reviews = await Review.find({ bootcamp: req.params.bootcampId });
+    const reviews = await Review.find({
+      bootcamp: req.params.bootcampId
+    })
+      .populate({
+        path: 'user',
+        select: 'name'
+      })
+      .sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
@@ -42,6 +49,38 @@ exports.getReview = asyncHandler(async (req, res, next) => {
   });
 });
 
+// @desc      Get reviews for a user
+// @route     GET /api/v1/reviews/user/:userId
+// @access    Public
+exports.getReviewsForUser = asyncHandler(async (req, res, next) => {
+  if (!req.params.userId) {
+    return next(
+      new ErrorResponse(`A valid user id must be provided to get reviews`, 404)
+    );
+  }
+
+  const reviews = await Review.find({ user: req.params.userId })
+    .select('title text rating')
+    .populate({
+      path: 'bootcamp',
+      select: 'name'
+    });
+
+  if (!reviews) {
+    return next(
+      new ErrorResponse(
+        `No reviews found for the user with id ${req.params.userId}}`,
+        404
+      )
+    );
+  }
+
+  res.status(200).json({
+    success: true,
+    data: reviews
+  });
+});
+
 // @desc      Add review
 // @route     POST /api/v1/bootcamps/:bootcampId/reviews
 // @access    Private
@@ -49,7 +88,7 @@ exports.addReview = asyncHandler(async (req, res, next) => {
   req.body.bootcamp = req.params.bootcampId;
   req.body.user = req.user.id;
 
-  const bootcamp = await Bootcamp.findById(req.params.bootcampId);
+  let bootcamp = await Bootcamp.findById(req.params.bootcampId);
 
   if (!bootcamp) {
     return next(
@@ -62,9 +101,14 @@ exports.addReview = asyncHandler(async (req, res, next) => {
 
   const review = await Review.create(req.body);
 
+  bootcamp = await Bootcamp.findById(req.params.bootcampId).select(
+    'name averageRating'
+  );
+
   res.status(201).json({
     success: true,
-    data: review
+    data: review,
+    bootcamp: { name: bootcamp.name, averageRating: bootcamp.averageRating }
   });
 });
 
@@ -90,9 +134,14 @@ exports.updateReview = asyncHandler(async (req, res, next) => {
     runValidators: true
   });
 
+  const bootcamp = await Bootcamp.findById(review.bootcamp).select(
+    'name averageRating'
+  );
+
   res.status(200).json({
     success: true,
-    data: review
+    data: review,
+    bootcamp: { name: bootcamp.name, averageRating: bootcamp.averageRating }
   });
 });
 

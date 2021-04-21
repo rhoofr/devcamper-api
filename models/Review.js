@@ -52,7 +52,7 @@ ReviewSchema.statics.getAverageRating = async function (bootcampId) {
 
   try {
     await this.model('Bootcamp').findByIdAndUpdate(bootcampId, {
-      averageRating: obj[0].averageRating
+      averageRating: parseFloat(obj[0].averageRating.toFixed(1))
     });
   } catch (err) {
     console.error(err);
@@ -60,8 +60,8 @@ ReviewSchema.statics.getAverageRating = async function (bootcampId) {
 };
 
 // Call getAverageCost after save
-ReviewSchema.post('save', function () {
-  this.constructor.getAverageRating(this.bootcamp);
+ReviewSchema.post('save', async function () {
+  await this.constructor.getAverageRating(this.bootcamp);
 });
 
 // Call getAverageCost before remove
