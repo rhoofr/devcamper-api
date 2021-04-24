@@ -1,5 +1,4 @@
 const path = require('path');
-const fs = require('fs');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const geocoder = require('../utils/geocoder');
@@ -17,7 +16,7 @@ exports.getBootcamps = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/bootcamps/:id
 // @access    Public
 exports.getBootcamp = asyncHandler(async (req, res, next) => {
-  const bootcamp = await Bootcamp.findById(req.params.id);
+  const bootcamp = await Bootcamp.findById(req.params.id).populate('courses');
 
   if (!bootcamp) {
     return next(
@@ -110,7 +109,6 @@ exports.deleteBootcamp = asyncHandler(async (req, res, next) => {
 
   // Remove any photo
   if (bootcamp.photo.url !== 'no-photo.jpg') {
-    // fs.unlinkSync(`${process.env.FILE_UPLOAD_PATH}/${bootcamp.photo}`);
     // Remove from cloudinary
     const res = await cloudinary.uploader.destroy(bootcamp.photo.filename);
   }
