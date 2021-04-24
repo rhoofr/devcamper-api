@@ -170,7 +170,7 @@ exports.bootcampPhotoUpload = asyncHandler(async (req, res, next) => {
     console.log('bootcampPhotoUpload - FILE TOO LARGE');
     return next(
       new ErrorResponse(
-        `Please upload an image less than ${process.env.MAX_FILE_UPLOAD} bytes`,
+        `Please upload an image less than ${process.env.MAX_FILE_UPLOAD} bytes (1MB)`,
         400
       )
     );
