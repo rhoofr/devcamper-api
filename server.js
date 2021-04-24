@@ -2,7 +2,6 @@ const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
 const colors = require('colors');
-const fileupload = require('express-fileupload');
 const morgan = require('morgan');
 const moment = require('moment-timezone');
 const cookieParser = require('cookie-parser');
@@ -28,6 +27,9 @@ connectDB();
 
 const app = express();
 
+// Enable CORS
+app.use(cors());
+
 // Route files
 const bootcamps = require('./routes/bootcamps');
 const courses = require('./routes/courses');
@@ -36,10 +38,12 @@ const users = require('./routes/users');
 const reviews = require('./routes/reviews');
 
 // Body parser
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 
 // Cookie parser
 app.use(cookieParser());
+
+app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
 // Development logging
 if (process.env.NODE_ENV === 'development') {
@@ -53,9 +57,6 @@ if (process.env.NODE_ENV === 'development') {
 
   app.use(morgan('myformat'));
 }
-
-// File uploading
-app.use(fileupload());
 
 // Sanitize data
 app.use(mongoSanitize());
@@ -75,9 +76,6 @@ app.use(limiter);
 
 // Prevent http param pollution
 app.use(hpp());
-
-// Enable CORS
-app.use(cors());
 
 // Set static folder
 app.use(express.static(path.join(__dirname, 'public')));

@@ -4,6 +4,7 @@ const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const geocoder = require('../utils/geocoder');
 const Bootcamp = require('../models/Bootcamp');
+const { cloudinary } = require('../utils/cloudinary');
 
 // @desc      Get all bootcamps
 // @route     GET /api/v1/bootcamps
@@ -108,9 +109,10 @@ exports.deleteBootcamp = asyncHandler(async (req, res, next) => {
   }
 
   // Remove any photo
-  if (bootcamp.photo !== 'no-photo.jpg') {
-    console.log(`removing ${process.env.FILE_UPLOAD_PATH}/${bootcamp.photo}`);
-    fs.unlinkSync(`${process.env.FILE_UPLOAD_PATH}/${bootcamp.photo}`);
+  if (bootcamp.photo.url !== 'no-photo.jpg') {
+    // fs.unlinkSync(`${process.env.FILE_UPLOAD_PATH}/${bootcamp.photo}`);
+    // Remove from cloudinary
+    const res = await cloudinary.uploader.destroy(bootcamp.photo.filename);
   }
 
   bootcamp.remove();
@@ -149,8 +151,34 @@ exports.getBootcampsInRadius = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/bootcamps/:id/photo
 // @access    Private
 exports.bootcampPhotoUpload = asyncHandler(async (req, res, next) => {
-  const bootcamp = await Bootcamp.findById(req.params.id);
+  // Make sure something is there
+  if (!req.body.body) {
+    console.log('bootcampPhotoUpload - NO FILE');
+    return next(new ErrorResponse(`Please upload a file`, 400));
+  }
 
+  const body = JSON.parse(req.body.body);
+  const fileStr = body.data;
+
+  // Make sure the file is an image
+  if (!fileStr.includes('image')) {
+    console.log('bootcampPhotoUpload - NOT AN IMAGE');
+    return next(new ErrorResponse(`Please upload an image file`, 400));
+  }
+
+  const filesize = fileStr.length * (3 / 4) - 17;
+  // Check filesize
+  if (filesize > process.env.MAX_FILE_UPLOAD) {
+    console.log('bootcampPhotoUpload - FILE TOO LARGE');
+    return next(
+      new ErrorResponse(
+        `Please upload an image less than ${process.env.MAX_FILE_UPLOAD} bytes`,
+        400
+      )
+    );
+  }
+
+  const bootcamp = await Bootcamp.findById(req.params.id);
   if (!bootcamp) {
     return next(
       new ErrorResponse(`Bootcamp not found with id of ${req.params.id}`, 404)
@@ -167,41 +195,25 @@ exports.bootcampPhotoUpload = asyncHandler(async (req, res, next) => {
     );
   }
 
-  if (!req.files) {
-    return next(new ErrorResponse(`Please upload a file`, 400));
-  }
-
-  const file = req.files.file;
-
-  // Make sure the image is a photo
-  if (!file.mimetype.startsWith('image')) {
-    return next(new ErrorResponse(`Please upload an image file`, 400));
-  }
-
-  // Check filesize
-  if (file.size > process.env.MAX_FILE_UPLOAD) {
-    return next(
-      new ErrorResponse(
-        `Please upload an image less than ${process.env.MAX_FILE_UPLOAD}`,
-        400
-      )
-    );
-  }
-
-  // Create custom filename
-  file.name = `photo_${bootcamp._id}${path.parse(file.name).ext}`;
-
-  file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async err => {
-    if (err) {
-      console.error(err);
-      return next(new ErrorResponse(`Problem with file upload`, 500));
-    }
-
-    await Bootcamp.findByIdAndUpdate(req.params.id, { photo: file.name });
-
+  try {
+    const uploadResponse = await cloudinary.uploader.upload(fileStr, {
+      folder: 'DevCamper/'
+    });
+    // console.log('uploadResponse: ', uploadResponse);
+    await Bootcamp.findByIdAndUpdate(req.params.id, {
+      photo: {
+        url: uploadResponse.secure_url,
+        filename: uploadResponse.public_id
+      }
+    });
     res.status(200).json({
       success: true,
-      data: file.name
+      data: {
+        url: uploadResponse.secure_url,
+        filename: uploadResponse.public_id
+      }
     });
-  });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
