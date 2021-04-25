@@ -6,8 +6,6 @@
   "scripts": {
     "start": "node server",
     "start:local": "SET NODE_ENV=production&&node server",
-    "start:test:donotuse": "SET NODE_ENV=test&&node server",
-    "test:jest:donotuse": "cross-env NODE_ENV=test jest --watch",
     "test": "SET NODE_ENV=test&&nodemon --watch . --exec \"mocha -S -timeout 10000 || true\"",
     "dev": "nodemon server"
   },
