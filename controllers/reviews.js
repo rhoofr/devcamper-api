@@ -134,6 +134,23 @@ exports.updateReview = asyncHandler(async (req, res, next) => {
     runValidators: true
   });
 
+  // Since this does not trigger the static method on the model to update averageRating doing it manually here
+  const obj = await Review.aggregate([
+    {
+      $match: { bootcamp: review.bootcamp }
+    },
+    {
+      $group: {
+        _id: '$bootcamp',
+        averageRating: { $avg: '$rating' }
+      }
+    }
+  ]);
+
+  await Bootcamp.findByIdAndUpdate(review.bootcamp, {
+    averageRating: parseFloat(obj[0].averageRating.toFixed(1))
+  });
+
   const bootcamp = await Bootcamp.findById(review.bootcamp).select(
     'name averageRating'
   );
