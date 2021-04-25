@@ -105,6 +105,23 @@ exports.updateCourse = asyncHandler(async (req, res, next) => {
     runValidators: true
   });
 
+  // Since this does not trigger the static method on the model to update averageCost doing it manually here
+  const obj = await Course.aggregate([
+    {
+      $match: { bootcamp: course.bootcamp }
+    },
+    {
+      $group: {
+        _id: '$bootcamp',
+        averageCost: { $avg: '$tuition' }
+      }
+    }
+  ]);
+
+  await Bootcamp.findByIdAndUpdate(course.bootcamp, {
+    averageCost: Math.ceil(obj[0].averageCost / 10) * 10
+  });
+
   res.status(200).json({
     success: true,
     data: course
