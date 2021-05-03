@@ -4,7 +4,8 @@
 
 ## Usage
 
-Rename "config/config.env.env" to "config/config.env" and update the values/settings to your own
+Rename "config/config.env.env" to "config/config.env" and update the values/settings to your own.
+This API uses the following services: mapquest, mailtrap, cloudinary and Mongo DB Atlas. These can be tweeked.
 
 ## Install Dependencies
 
@@ -34,12 +35,10 @@ node seeder -d
 node seeder -i
 ```
 
-## Demo
+## Docs
 
-The API is live at [devcamper.io](https://devcamper.io)
-
-Extensive documentation with examples [here](https://documenter.getpostman.com/view/8923145/SVtVVTzd?version=latest)
+Extensive documentation with examples [here](https://hoofsoft-devcamper-api.herokuapp.com/)
 
 - Version: 1.0.0
 - License: MIT
-- Author: Brad Traversy
+- Author: Richard Hoofring
